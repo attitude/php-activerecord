@@ -62,6 +62,18 @@ class MysqlAdapter extends Connection
 
 			if (count($matches) >= 4)
 				$c->length = intval($matches[3]);
+			
+			if(in_array($c->raw_type, array('set','enum') ))
+			{
+				$c->options = json_decode( 
+					strtr(
+						str_replace(
+							$c->raw_type, '', $column['type']
+						),
+						array('('=>'[',')'=>']', "'"=>'"')
+					)
+				);
+			}
 		}
 
 		$c->map_raw_type();
