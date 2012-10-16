@@ -173,8 +173,13 @@ abstract class AbstractRelationship implements InterfaceRelationship
 			// reset keys
 			$this->primary_key = $pk;
 			$this->foreign_key = $fk;
+			
+			$is_through = TRUE;
 		}
-
+		else
+		{
+			$is_through = FALSE;
+		}
 		$options = $this->unset_non_finder_options($options);
 
 		$class = $this->class_name;
@@ -191,17 +196,28 @@ abstract class AbstractRelationship implements InterfaceRelationship
 
 			foreach ($related_models as $related)
 			{
-				if ($related->$query_key == $key_to_match)
+				if( $is_through )
 				{
 					$hash = spl_object_hash($related);
-
-					if (in_array($hash, $used_models))
-						$model->set_relationship_from_eager_load(clone($related), $this->attribute_name);
-					else
-						$model->set_relationship_from_eager_load($related, $this->attribute_name);
+					$model->set_relationship_from_eager_load($related, $this->attribute_name);
 
 					$used_models[] = $hash;
 					$matches++;
+				}
+				else
+				{
+					if ($related->$query_key == $key_to_match)
+					{
+						$hash = spl_object_hash($related);
+	
+						if (in_array($hash, $used_models))
+							$model->set_relationship_from_eager_load(clone($related), $this->attribute_name);
+						else
+							$model->set_relationship_from_eager_load($related, $this->attribute_name);
+	
+						$used_models[] = $hash;
+						$matches++;
+					}
 				}
 			}
 
